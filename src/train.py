@@ -1,94 +1,77 @@
-import sys
-from pathlib import Path
-from typing import Tuple
-
+import os
 import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import tensorflow as tf
-import yaml
-
-from utils.seed import set_seed
 
 
-def get_model(
-    image_shape: Tuple[int, int, int],
-    conv_size1: int,
-    conv_size2: int,
-    dense_size: int,
-    output_classes: int,
-) -> tf.keras.Model:
-    """Create a CNN model with an additional Conv2D layer, Dropout, and softmax activation."""
-    model = tf.keras.models.Sequential(
-        [
-            tf.keras.layers.Input(shape=image_shape),
-            tf.keras.layers.Conv2D(conv_size1, (3, 3), activation="relu"),
-            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            tf.keras.layers.Conv2D(conv_size2, (3, 3), activation="relu"),
-            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(dense_size, activation="relu"),
-            tf.keras.layers.Dropout(0.5),
-            tf.keras.layers.Dense(output_classes, activation="softmax"),
-        ]
-    )
+# Function to load images from directories in dataset/trainset/
+def load_images_from_folders(base_dir="dataset/trainset"):
+    images = []  
+    labels = []  
+    class_names = []  # This will hold the unique class names
+
+    # Loop through the directories (subfolders) and gather images
+    for folder_name in os.listdir(base_dir):
+        folder_path = os.path.join(base_dir, folder_name)
+        
+        if os.path.isdir(folder_path):
+            class_names.append(folder_name)  # Add folder name as class name
+            # Iterate through each file in the folder
+            for file_name in os.listdir(folder_path):
+                if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
+                    file_path = os.path.join(folder_path, file_name)
+                    image = load_img(file_path, target_size=(64, 64), color_mode='grayscale')  # Resize and convert to grayscale
+                    image_array = img_to_array(image)  # No need to normalize here, assuming it's already done
+
+                    images.append(image_array)
+                    labels.append(folder_name)  # Folder name is the label
+
+    # Convert lists to numpy arrays
+    images = np.array(images)
+    labels = np.array(labels)
+
+    print(f"Loaded {len(images)} images.")
+    print("Class names:", class_names)
+    return images, labels, class_names
+
+
+def create_model(input_shape=(64, 64, 1), num_classes=10):
+    model = Sequential([
+        Input(shape=input_shape),
+        Conv2D(32, kernel_size=(3, 3), activation='relu'),
+        MaxPooling2D(pool_size=(2, 2)),
+        Conv2D(64, kernel_size=(3, 3), activation='relu'),
+        MaxPooling2D(pool_size=(2, 2)),
+        Flatten(),
+        Dense(128, activation='relu'),
+        Dropout(0.5),
+        Dense(num_classes, activation='softmax')
+    ])
     return model
 
-
-def main() -> None:
-    if len(sys.argv) != 3:
-        print("Arguments error. Usage:\n")
-        print("\tpython3 train.py <prepared-dataset-folder> <model-folder>\n")
-        exit(1)
-
-    # Load parameters
-    prepare_params = yaml.safe_load(open("params.yaml"))["prepare"]
-    train_params = yaml.safe_load(open("params.yaml"))["train"]
-
-    prepared_dataset_folder = Path(sys.argv[1])
-    model_folder = Path(sys.argv[2])
-
-    image_size = prepare_params["image_size"]
-    grayscale = prepare_params["grayscale"]
-    image_shape = (*image_size, 1 if grayscale else 3)
-
-    seed = train_params["seed"]
-    lr = train_params["lr"]
-    epochs = train_params["epochs"]
-    conv_size = train_params["conv_size"]
-    dense_size = train_params["dense_size"]
-    output_classes = train_params["output_classes"]
-
-    # Set seed for reproducibility
-    set_seed(seed)
-
-    # Load data
-    ds_train = tf.data.Dataset.load(str(prepared_dataset_folder / "train"))
-    ds_test = tf.data.Dataset.load(str(prepared_dataset_folder / "test"))
-
-    # Define the model
-    model = get_model(image_shape, conv_size, dense_size, output_classes)
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(lr),
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
-    )
-    model.summary()
-
-    # Train the model
-    model.fit(
-        ds_train,
-        epochs=epochs,
-        validation_data=ds_test,
-    )
-
-    # Save the model
-    model_folder.mkdir(parents=True, exist_ok=True)
-    model_path = model_folder / "model.keras"
-    model.save(model_path)
-    # Save the model history
-    np.save(model_folder / "history.npy", model.history.history)
-
-    print(f"\nModel saved at {model_folder.absolute()}")
+def train_model(model, x_train, y_train, epochs=10, batch_size=128):
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, validation_split=0.2)
+    model.save('model.h5')  # Save the trained model
+    return history
 
 
 if __name__ == "__main__":
-    main()
+    # Load the data from the dataset folder (dataset/trainset)
+    x_train, labels, class_names = load_images_from_folders("dataset/trainset")
+
+    # Map labels to integers and one-hot encode them
+    label_map = {class_name: index for index, class_name in enumerate(class_names)}
+    y_train = np.array([label_map[label] for label in labels])
+    y_train = to_categorical(y_train, num_classes=len(class_names))  # One-hot encode labels
+
+    # Create and train the model
+    model = create_model(input_shape=(64, 64, 1), num_classes=len(class_names))
+    model.summary()
+    history = train_model(model, x_train, y_train)
+
+    # Optionally, print the history of the training
+    print("Training history:", history.history)

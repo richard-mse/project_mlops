@@ -1,161 +1,109 @@
-import json
-import sys
-from pathlib import Path
-from typing import List
-
-import matplotlib.pyplot as plt
+import os
 import numpy as np
-import tensorflow as tf
+import matplotlib.pyplot as plt
+import seaborn as sns
+from tensorflow.keras.models import load_model
+from sklearn.metrics import confusion_matrix
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from tensorflow.keras.utils import to_categorical
+
+# Function to load images from directories in dataset/trainset/
+def load_images_from_folders(base_dir="dataset/trainset"):
+    images = []  
+    labels = []  
+    class_names = []  # This will hold the unique class names
+
+    # Loop through the directories (subfolders) and gather images
+    for folder_name in os.listdir(base_dir):
+        folder_path = os.path.join(base_dir, folder_name)
+        
+        if os.path.isdir(folder_path):
+            class_names.append(folder_name)  # Add folder name as class name
+            # Iterate through each file in the folder
+            for file_name in os.listdir(folder_path):
+                if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
+                    file_path = os.path.join(folder_path, file_name)
+                    image = load_img(file_path, target_size=(64, 64), color_mode='grayscale')  # Resize and convert to grayscale
+                    image_array = img_to_array(image)  # Already normalized from the prepare.py step
+
+                    images.append(image_array)
+                    labels.append(folder_name)  # Folder name is the label
+
+    # Convert lists to numpy arrays
+    images = np.array(images)
+    labels = np.array(labels)
+
+    print(f"Loaded {len(images)} images for testing.")
+    print("Class names:", class_names)
+    return images, labels, class_names
 
 
-def get_training_plot(model_history: dict) -> plt.Figure:
-    """Plot the training and validation loss"""
-    epochs = range(1, len(model_history["loss"]) + 1)
+def evaluate_model(model, x_test, y_test):
+    test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+    print(f"Test Accuracy: {test_accuracy:.4f}")
+    return test_accuracy
 
-    fig = plt.figure(figsize=(10, 4))
-    plt.plot(epochs, model_history["loss"], label="Training loss")
-    plt.plot(epochs, model_history["val_loss"], label="Validation loss")
-    plt.xticks(epochs)
-    plt.title("Training and validation loss")
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
+
+def plot_confusion_matrix(model, x_test, y_test, save_path=None):
+    # Get model predictions
+    y_pred = model.predict(x_test)
+    y_pred_classes = np.argmax(y_pred, axis=1)
+    y_true = np.argmax(y_test, axis=1)
+    
+    # Calculate confusion matrix
+    cm = confusion_matrix(y_true, y_pred_classes)
+    
+    # Plot confusion matrix
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=range(len(np.unique(y_true))), yticklabels=range(len(np.unique(y_true))))
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    plt.title('Confusion Matrix')
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300)  # Save confusion matrix plot
+        print(f"Confusion matrix saved to {save_path}")
+    else:
+        plt.show()
+
+
+def plot_loss(history, save_path=None):
+    # Plot loss curve
+    plt.figure(figsize=(8, 6))
+    plt.plot(history.history['loss'], label='Training Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.title('Model Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
     plt.legend()
-    plt.grid(True)
+    plt.grid()
 
-    return fig
-
-
-def get_pred_preview_plot(
-    model: tf.keras.Model, ds_test: tf.data.Dataset, labels: List[str]
-) -> plt.Figure:
-    """Plot a preview of the predictions"""
-    fig = plt.figure(figsize=(10, 5), tight_layout=True)
-    for images, label_idxs in ds_test.take(1):
-        preds = model.predict(images)
-        for i in range(10):
-            plt.subplot(2, 5, i + 1)
-            img = (images[i].numpy() * 255).astype("uint8")
-            # Convert image to rgb if grayscale
-            if img.shape[-1] == 1:
-                img = np.squeeze(img, axis=-1)
-                img = np.stack((img,) * 3, axis=-1)
-            true_label = labels[label_idxs[i].numpy()]
-            pred_label = labels[np.argmax(preds[i])]
-            # Add red border if the prediction is wrong else add green border
-            img = np.pad(img, pad_width=((1, 1), (1, 1), (0, 0)))
-            if true_label != pred_label:
-                img[0, :, 0] = 255  # Top border
-                img[-1, :, 0] = 255  # Bottom border
-                img[:, 0, 0] = 255  # Left border
-                img[:, -1, 0] = 255  # Right border
-            else:
-                img[0, :, 1] = 255
-                img[-1, :, 1] = 255
-                img[:, 0, 1] = 255
-                img[:, -1, 1] = 255
-
-            plt.imshow(img)
-            plt.title(f"True: {true_label}\n" f"Pred: {pred_label}")
-            plt.axis("off")
-
-    return fig
-
-
-def get_confusion_matrix_plot(
-    model: tf.keras.Model, ds_test: tf.data.Dataset, labels: List[str]
-) -> plt.Figure:
-    """Plot the confusion matrix"""
-    fig = plt.figure(figsize=(6, 6), tight_layout=True)
-    preds = model.predict(ds_test)
-
-    conf_matrix = tf.math.confusion_matrix(
-        labels=tf.concat([y for _, y in ds_test], axis=0),
-        predictions=tf.argmax(preds, axis=1),
-        num_classes=len(labels),
-    )
-
-    # Plot the confusion matrix
-    conf_matrix = conf_matrix / tf.reduce_sum(conf_matrix, axis=1)
-    plt.imshow(conf_matrix, cmap="Blues")
-
-    # Plot cell values
-    for i in range(len(labels)):
-        for j in range(len(labels)):
-            value = conf_matrix[i, j].numpy()
-            if value == 0:
-                color = "lightgray"
-            elif value > 0.5:
-                color = "white"
-            else:
-                color = "black"
-            plt.text(
-                j,
-                i,
-                f"{value:.2f}",
-                ha="center",
-                va="center",
-                color=color,
-                fontsize=8,
-            )
-
-    plt.colorbar()
-    plt.xticks(range(len(labels)), labels, rotation=90)
-    plt.yticks(range(len(labels)), labels)
-    plt.xlabel("Predicted label")
-    plt.ylabel("True label")
-    plt.title("Confusion matrix")
-
-    return fig
-
-
-def main() -> None:
-    if len(sys.argv) != 3:
-        print("Arguments error. Usage:\n")
-        print("\tpython3 evaluate.py <model-folder> <prepared-dataset-folder>\n")
-        exit(1)
-
-    model_folder = Path(sys.argv[1])
-    prepared_dataset_folder = Path(sys.argv[2])
-    evaluation_folder = Path("evaluation")
-    plots_folder = Path("plots")
-
-    # Create folders
-    (evaluation_folder / plots_folder).mkdir(parents=True, exist_ok=True)
-
-    # Load files
-    ds_test = tf.data.Dataset.load(str(prepared_dataset_folder / "test"))
-    labels = None
-    with open(prepared_dataset_folder / "labels.json") as f:
-        labels = json.load(f)
-
-    # Load model
-    model_path = model_folder / "model.keras"
-    model = tf.keras.models.load_model(model_path)
-    model_history = np.load(model_folder / "history.npy", allow_pickle=True).item()
-
-    # Log metrics
-    val_loss, val_acc = model.evaluate(ds_test)
-    print(f"Validation loss: {val_loss:.2f}")
-    print(f"Validation accuracy: {val_acc * 100:.2f}%")
-    with open(evaluation_folder / "metrics.json", "w") as f:
-        json.dump({"val_loss": val_loss, "val_acc": val_acc}, f)
-
-    # Save training history plot
-    fig = get_training_plot(model_history)
-    fig.savefig(evaluation_folder / plots_folder / "training_history.png")
-
-    # Save predictions preview plot
-    fig = get_pred_preview_plot(model, ds_test, labels)
-    fig.savefig(evaluation_folder / plots_folder / "pred_preview.png")
-
-    # Save confusion matrix plot
-    fig = get_confusion_matrix_plot(model, ds_test, labels)
-    fig.savefig(evaluation_folder / plots_folder / "confusion_matrix.png")
-
-    print(
-        f"\nEvaluation metrics and plot files saved at {evaluation_folder.absolute()}"
-    )
+    if save_path:
+        plt.savefig(save_path, dpi=300)  # Save loss plot
+        print(f"Loss plot saved to {save_path}")
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
-    main()
+    x_test, labels, class_names = load_images_from_folders("dataset/testset")
+
+    # Map labels to integers and one-hot encode them
+    label_map = {class_name: index for index, class_name in enumerate(class_names)}
+    y_test = np.array([label_map[label] for label in labels])
+    y_test = to_categorical(y_test, num_classes=len(class_names))  # One-hot encode labels
+
+    # Load the trained model
+    model = load_model('model.h5')  # The model trained in train.py
+    
+    # Evaluate the model and display accuracy
+    evaluate_model(model, x_test, y_test)
+    
+    # Create results folder if not exists
+    results_folder = 'results'
+    if not os.path.exists(results_folder):
+        os.makedirs(results_folder)
+
+    # Save confusion matrix plot
+    confusion_matrix_path = os.path.join(results_folder, 'confusion_matrix.png')
+    plot_confusion_matrix(model, x_test, y_test, save_path=confusion_matrix_path)
