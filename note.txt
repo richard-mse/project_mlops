@@ -1,0 +1,47 @@
+updateDataset
+-creer dataset:h5
+- image de processs
+
+updateDataset
+-append dataset.h5
+-image de process
+
+
+updateDataset
+-creer dataset-newBatch.h5
+- image de processs
+
+updateDataset
+-renomer newBatch -> oldBatch
+-creer dataset-newBatch.h5
+-image de process
+
+
+updateDataset
+-creer dataset-batch3.h5
+-image de process
+-append a oldBatch batch2
+
+train
+- recuperer batch3.h5
+- ajouter 20% de batch1 ou batch2
+
+
+
+
+
+
+
+
+
+
+
+- Dessine charactère
+- 20 fois le meme
+
+- Process image
+- mets tes images -> rawImages
+- paramtre ton charactere
+
+- créer le dossier du char
+-image resize dedans

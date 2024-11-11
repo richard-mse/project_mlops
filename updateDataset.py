@@ -20,6 +20,7 @@ def createDataset(images, labels, datasetFileName="dataset"):
         
         # Créer un dataset pour les labels avec maxshape=(None,) pour permettre l'ajout de nouveaux labels
         f.create_dataset('labels', data=labels, maxshape=(None,), dtype="S10", compression="gzip", chunks=True)
+        f.create_dataset('Times', data=labels, maxshape=(None,), dtype="S10", compression="gzip", chunks=True)
 
         # Optionnel : Ajouter des métadonnées pour mieux organiser
         f.attrs['description'] = 'Dataset d\'images pour classification'
@@ -53,9 +54,12 @@ def readDataset(datasetFileName="dataset"):
 
         images = f['images'][:]
         labels = f['labels'][:]
+        times = f['Times'][:]
 
+        print(images)
         print("Images shape:", images.shape)
         print("Labels:", labels)
+        print("Times",times)
 
 def load_images_from_folders(base_dir="./dataset/processed",archive_dir="./dataset/archive"):
     images = []  
@@ -96,10 +100,10 @@ def load_images_from_folders(base_dir="./dataset/processed",archive_dir="./datas
 
 
 images, labels = load_images_from_folders()
-if len(images)==0:
+if len(images)<=10:
     print("Rien à ajouter au dataset.")
 else:
-    #createDataset(images, labels)   # Crée le dataset initial
-    appendDataset(images, labels)   # Ajoute de nouvelles données
+    createDataset(images, labels)   # Crée le dataset initial
+    #appendDataset(images, labels)   # Ajoute de nouvelles données
 
-#readDataset()     # Lis et affiche le contenu du dataset initial
+readDataset()     # Lis et affiche le contenu du dataset initial
