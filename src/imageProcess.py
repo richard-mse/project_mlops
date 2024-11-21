@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime
 from PIL import Image
 
 def process_images(input_dir='./dataset/unprocessed/rawImage', output_dir='./dataset/processed', target_size=(64, 64), label='a'):
@@ -32,8 +33,9 @@ def process_images(input_dir='./dataset/unprocessed/rawImage', output_dir='./dat
             with Image.open(input_path) as img:
                 img_resized = img.resize(target_size)
 
-                # Format de nommage : 0000x.png
-                output_filename = f"{i:05d}.png"
+                # Format de nommage : YYYYMMDD_HHMMSS_0000x.png
+                current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+                output_filename = f"{current_time}_{i:05d}.png"
                 output_path = os.path.join(os.path.join(output_dir, label), output_filename)
 
                 img_resized.save(output_path, format='PNG')
@@ -41,4 +43,4 @@ def process_images(input_dir='./dataset/unprocessed/rawImage', output_dir='./dat
     print(f"Toutes les images ont été traitées et enregistrées dans le dossier '{os.path.join(output_dir, label)}'.")
 
 # Exécution de la fonction
-process_images(label="i")
+process_images(label="a")
