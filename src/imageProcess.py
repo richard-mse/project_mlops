@@ -3,7 +3,9 @@ import json
 from datetime import datetime
 from PIL import Image
 
-def process_images(input_dir='./dataset/unprocessed/rawImage', output_dir='./dataset/processed', target_size=(64, 64), label='a'):
+
+def process_images(input_dir='./dataset/unprocessed/rawImage', output_dir='./dataset/processed', target_size=(64, 64),
+                   label='a'):
     """
     Génère une copie redimensionnée des images du dossier d'entrée dans un nouveau dossier au format PNG 
     et crée un fichier JSON contenant une liste des labels associés.
@@ -29,7 +31,6 @@ def process_images(input_dir='./dataset/unprocessed/rawImage', output_dir='./dat
 
         # Vérifie si le fichier est une image
         if os.path.isfile(input_path) and filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
-            
             with Image.open(input_path) as img:
                 img_resized = img.resize(target_size)
 
@@ -41,6 +42,7 @@ def process_images(input_dir='./dataset/unprocessed/rawImage', output_dir='./dat
                 img_resized.save(output_path, format='PNG')
 
     print(f"Toutes les images ont été traitées et enregistrées dans le dossier '{os.path.join(output_dir, label)}'.")
+
 
 # Exécution de la fonction
 process_images(label="a")
