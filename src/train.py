@@ -2,13 +2,14 @@ import os
 
 import bentoml
 import numpy as np
-from PIL.Image import Image
+
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.utils import to_categorical
 
 import tensorflow as tf
+from PIL.Image import Image
 
 from common.constants import MODEL_TITLE, MODEL_PATH
 
@@ -68,22 +69,32 @@ def train_model(model, x_train, y_train, epochs=10, batch_size=128):
 
 
 def save_model(model_name, model_to_save, optimizer=True):
-    def postprocess(x: Image):
-        return {
-            "prediction": labels[tf.argmax(x, axis=-1).numpy()[0]],
-            "probabilities": {
-                labels[i]: prob
-                for i, prob in enumerate(tf.nn.softmax(x).numpy()[0].tolist())
-            },
-        }
+    # def preprocess(x: Image):
+    #     # convert PIL image to tensor
+    #     x = x.resize((64, 64))
+    #     x = np.array(x)
+    #     x = x / 255.0
+    #     # add batch dimension
+    #     x = np.expand_dims(x, axis=0)
+    #     return x
+    #
+    # def postprocess(x: Image):
+    #     return {
+    #         "prediction": labels[tf.argmax(x, axis=-1).numpy()[0]],
+    #         "probabilities": {
+    #             labels[i]: prob
+    #             for i, prob in enumerate(tf.nn.softmax(x).numpy()[0].tolist())
+    #         },
+    #     }
 
     bentoml.keras.save_model(
         model_name,
         model_to_save,
         include_optimizer=optimizer,
-        custom_objects={
-            "postprocess": postprocess,
-        }
+        # custom_objects={
+        #     "preprocess": preprocess,
+        #     "postprocess": postprocess,
+        # }
     )
 
 
