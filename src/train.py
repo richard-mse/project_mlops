@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
 from tensorflow.keras.utils import to_categorical
@@ -90,6 +91,11 @@ if __name__ == "__main__":
     model.summary()
     history = train_model(model, x_train, y_train)
 
+    # Create results folder if not exists
+    results_folder = 'results'
+    if not os.path.exists(results_folder):
+        os.makedirs(results_folder)
+    
     # Save loss plot
     loss_path = os.path.join(results_folder, 'loss.png')
     plot_loss(history, loss_path)
