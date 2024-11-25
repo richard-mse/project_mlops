@@ -1,0 +1,10 @@
+service: 'serve:HiraganaClassifierService'
+include:
+  - service.py
+python:
+  packages:
+    - "tensorflow==2.17.0"
+    - "matplotlib==3.9.2"
+    - "pillow==11.0.0"
+docker:
+    python_version: "3.10"
