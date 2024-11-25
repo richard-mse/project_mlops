@@ -67,24 +67,6 @@ def plot_confusion_matrix(model, x_test, y_test, save_path=None):
         plt.show()
 
 
-def plot_loss(history, save_path=None):
-    # Plot loss curve
-    plt.figure(figsize=(8, 6))
-    plt.plot(history.history['loss'], label='Training Loss')
-    plt.plot(history.history['val_loss'], label='Validation Loss')
-    plt.title('Model Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.grid()
-
-    if save_path:
-        plt.savefig(save_path, dpi=300)  # Save loss plot
-        print(f"Loss plot saved to {save_path}")
-    else:
-        plt.show()
-
-
 if __name__ == "__main__":
     x_test, labels, class_names = load_images_from_folders("dataset/testset")
 
