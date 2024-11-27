@@ -1,96 +1,95 @@
 import os
 import numpy as np
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
-from sklearn.preprocessing import LabelEncoder
-from PIL import Image
-import shutil
+import h5py
+import warnings
 
-def load_images_from_folders(base_dir="dataset/processed"):
-    images = []  
-    labels = []  
-    class_names = []  # This will hold the unique class names
+#Fonction for extract data from dataset.h5
+def extract_dataset(base_file):
+    with h5py.File(base_file + ".h5", 'r') as f:
+        lastRevision = f.attrs["revision"]
+        class_names = f.attrs["class_list"]
+        images = f['images'][:]
+        labels = f['labels'][:]
+        updateId =  f['update-id'][:]
 
-    # Loop through the directories and gather images
-    for folder_name in os.listdir(base_dir):
-        folder_path = os.path.join(base_dir, folder_name)
-        
-        if os.path.isdir(folder_path):
-            class_names.append(folder_name)  # Add folder name as class name
-            # Iterate through each file in the folder
-            for file_name in os.listdir(folder_path):
-                if file_name.lower().endswith(('.png', '.jpg', '.jpeg')):  # Image file extensions
-                    file_path = os.path.join(folder_path, file_name)
-                    image = load_img(file_path, target_size=(64, 64), color_mode='grayscale')  # Resize and convert to grayscale
-                    image_array = img_to_array(image) / 255.0  # Normalize image
+    labels = np.array([label.decode("utf-8") for label in labels])
 
-                    images.append(image_array)
-                    labels.append(folder_name)  # Folder name is the label
+    return images, labels, updateId, int(lastRevision), class_names
 
-    # Convert lists to numpy arrays
-    images = np.array(images)
-    labels = np.array(labels)
+#Fonction for split new data from previous data
+def split_new_data(all_images,all_labels, all_updateId, lastRevision):
+    new_images = all_images[np.where(all_updateId==lastRevision)[0][0]:]
+    new_labels = all_labels[np.where(all_updateId==lastRevision)[0][0]:]
 
-    print(f"Loaded {len(images)} images.")
-    print("Class names:", class_names)
+    old_images = all_images[:np.where(all_updateId==lastRevision)[0][0]]
+    old_labels = all_labels[:np.where(all_updateId==lastRevision)[0][0]]
+
+    return new_images, new_labels, old_images, old_labels
+
+#Fonction for select old data for training
+def select_old_data(old_images,old_labels,replay_fraction):
+    old_images_count = old_images.shape[0]
+    replay_samples = int(replay_fraction*old_images_count)
+    replay_indices = np.random.choice(old_images_count, replay_samples, replace=False)
+    replay_images = old_images[replay_indices]
+    replay_labels = old_labels[replay_indices]
+
+    return replay_images, replay_labels
+
+def shuffle_dataset(images, labels):
+    shuffle_indices = np.random.permutation(images.shape[0])
+    images = images[shuffle_indices]
+    labels = labels[shuffle_indices]
+
+    return images, labels
+
+def load_dataset(base_file="dataset", replay_fraction = 1.0):
+    all_images, all_labels, all_updateId, lastRevision, class_names = extract_dataset(base_file)
+
+    new_images, new_labels, old_images, old_labels = split_new_data(all_images,all_labels, all_updateId, lastRevision)
+    
+    replay_images, replay_labels = select_old_data(old_images,old_labels,replay_fraction)
+
+    images = np.concatenate((new_images,replay_images),axis=0)
+    labels = np.concatenate((new_labels,replay_labels),axis=0)
+
+    images, labels = shuffle_dataset(images,labels)
+
     return images, labels, class_names
 
+def add_train_to_dataset(X_train, X_test, y_train, y_test, base_file="dataset"):
+    with h5py.File(base_file+".h5", "a") as f:
+        if "X_train" in f:
+            del f["X_train"]
+        f.create_dataset("X_train", data=X_train)
+        if "X_test" in f:
+                del f["X_test"]
+        f.create_dataset("X_test", data=X_test)
+        if "y_train" in f:
+                del f["y_train"]
+        f.create_dataset("y_train", data=y_train)
+        if "y_test" in f:
+                del f["y_test"]
+        f.create_dataset("y_test", data=y_test)
 
-def clear_and_create_dirs(*dirs):
-    # Clear the directories if they exist and recreate them
-    for dir_path in dirs:
-        if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)  # Remove all files/folders inside
-        os.makedirs(dir_path)  # Recreate the directory
-
-
-def split_and_save_data(images, labels, class_names, train_dir="dataset/trainset", test_dir="dataset/testset", test_size=0.2):
-    # Clear existing data in trainset and testset folders
-    clear_and_create_dirs(train_dir, test_dir)
+#Fonction for split between train set and test set
+def split_dataset(images, labels, class_names, base_file="dataset", test_size=0.2):
 
     # Encode labels to integer values
-    label_encoder = LabelEncoder()
-    y_encoded = label_encoder.fit_transform(labels)
-    y_encoded = np.array(y_encoded)
+    # On utilise plus label_encoder car sinon ordre alphabetique latin
+    label_map = {class_name: index for index, class_name in enumerate(class_names)}
+    y_encoded = np.array([label_map[label] for label in labels])
 
     # Split data into training and test sets
+    warnings.warn("Random_state initalisé !", UserWarning)
     X_train, X_test, y_train, y_test = train_test_split(images, y_encoded, test_size=test_size, random_state=42)
 
-    # Save images to the train and test folders
-    save_data_to_folders(X_train, y_train, train_dir, label_encoder)
-    save_data_to_folders(X_test, y_test, test_dir, label_encoder)
-
-
-def save_data_to_folders(X_data, y_data, data_dir, label_encoder):
-    # Save images in the corresponding class folders
-    for i, image in enumerate(X_data):
-        label = label_encoder.inverse_transform([y_data[i]])[0]  # Get the original class name from label encoding
-        label_folder = os.path.join(data_dir, label)
-        
-        # Create class folder if it does not exist
-        if not os.path.exists(label_folder):
-            os.makedirs(label_folder)
-        
-        # Format image filename as 00001.png, 00002.png, etc.
-        output_filename = f"{i:05d}.png"
-        output_path = os.path.join(label_folder, output_filename)
-        
-        # Convert NumPy array to PIL Image and save it
-        img = (image * 255).astype(np.uint8)  # Convert back to original range (0-255)
-        img = Image.fromarray(img.squeeze(), 'L')  # 'L' mode for grayscale image
-        
-        img.save(output_path, format='PNG')
-        print(f"Saved {output_filename} in {label_folder}")
-
+    add_train_to_dataset(X_train, X_test, y_train, y_test, base_file="dataset")
 
 def main():
-    # Load images from the dataset
-    images, labels, class_names = load_images_from_folders("dataset/processed")
-    
-    # Split and save the dataset into train and test sets
-    split_and_save_data(images, labels, class_names)
-
-    print("Dataset splitting and saving completed.")
+    images, labels, class_names = load_dataset(base_file="dataset",replay_fraction=1.0)
+    split_dataset(images, labels, class_names, base_file="dataset", test_size=0.2)
 
 
 if __name__ == "__main__":
