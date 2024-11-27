@@ -41,6 +41,7 @@ def createDataset(images, labels, datasetFileName="dataset"):
         f.attrs['description'] = 'Dataset d\'images pour classification'
         f.attrs['source'] = 'Hiragana écrit a la main'
         f.attrs['revision'] = '0'
+        f.attrs['class_list'] = ['a','i','u','e','o','ka','ki','ku','ke','ko']
 
 def appendDataset(newImages, newLabels, datasetFileName="dataset"):
     if not checkDatasetExist(datasetFileName):
@@ -73,8 +74,6 @@ def appendDataset(newImages, newLabels, datasetFileName="dataset"):
 
     with h5py.File(datasetFileName + ".h5", 'r+') as f:
         f.attrs['revision'] = str(revision)
-
-    readDataset(datasetFileName)
 
 def readDataset(datasetFileName="dataset"):
     with h5py.File(datasetFileName + ".h5", 'r') as f:
@@ -132,12 +131,41 @@ def load_images_from_folders(base_dir="./dataset/processed",archive_dir="./datas
 
     return images, labels
 
-forceUpdate = False
-images, labels = load_images_from_folders()
-if len(images)<=10 and not forceUpdate:
-    print("Rien à ajouter au dataset.")
-else:
-    createDataset(images, labels)   # Crée le dataset initial
-    #appendDataset(images, labels)   # Ajoute de nouvelles données
+def check_conditions(forceUpdate=False, minimumImages=10, base_dir="./dataset/processed"):
+    images = 0
+    if forceUpdate:
+        return True
 
-readDataset()     # Lis et affiche le contenu du dataset initial
+    # Parcourir tous les sous-dossiers dans le dossier de base
+    for folder_name in os.listdir(base_dir):
+        folder_path = os.path.join(base_dir, folder_name)
+        
+        if os.path.isdir(folder_path):
+            # Parcourir tous les fichiers dans le dossier
+            for file_name in os.listdir(folder_path):
+                if file_name.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    images += 1
+
+    if images >= minimumImages:
+        return True
+    else:
+        return False
+
+def main():
+    forceUpdate = False
+    minimumImages = 10
+
+    if check_conditions(forceUpdate, minimumImages):
+        images, labels = load_images_from_folders()
+
+        if checkDatasetExist(datasetFileName="dataset"):
+            appendDataset(images, labels)  # Ajoute de nouvelles données
+        else:
+            createDataset(images, labels)   # Crée le dataset initial
+
+        readDataset()     # Lis et affiche le contenu du dataset
+    else:
+        print("Rien à ajouter au dataset.")
+
+if __name__ == "__main__":
+    main()
