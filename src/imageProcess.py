@@ -40,4 +40,4 @@ def process_images(input_dir='./dataset/unprocessed/rawImage', output_dir='./dat
     print(f"Toutes les images ont été traitées et enregistrées dans le dossier '{os.path.join(output_dir, label)}'.")
 
 # Exécution de la fonction
-process_images(label="ka")
+process_images(label="u")

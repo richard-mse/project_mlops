@@ -52,13 +52,36 @@ def plot_loss(history, save_path=None):
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
+def calculate_prediction_variance(model, x_test, save_path=None):
+    """
+    Calculate the variance of the model's predictions and save the histogram plot.
+    """
+    # Get model predictions
+    predictions = model.predict(x_test)
+    
+    # Calculate variance for each sample
+    variances = np.var(predictions, axis=1)  # Variance across class probabilities for each sample
+    
+    # Calculate mean variance
+    mean_variance = np.mean(variances)
+    print(f"Mean Variance of Predictions: {mean_variance:.4f}")
+    
+    # Plot histogram of variances
+    plt.figure(figsize=(10, 6))
+    plt.hist(variances, bins=20, color='blue', edgecolor='black')
+    plt.title("Variance of Predictions")
+    plt.xlabel("Variance")
+    plt.ylabel("Frequency")
     plt.grid()
-
+    
+    # Save or show the plot
     if save_path:
-        plt.savefig(save_path, dpi=300)  # Save loss plot
-        print(f"Loss plot saved to {save_path}")
+        plt.savefig(save_path, dpi=300)  # Save histogram plot
+        print(f"Variance histogram saved to {save_path}")
     else:
         plt.show()
+
+    return variances
 
 
 if __name__ == "__main__":
@@ -81,3 +104,7 @@ if __name__ == "__main__":
     # Save confusion matrix plot
     confusion_matrix_path = os.path.join(results_folder, 'confusion_matrix.png')
     plot_confusion_matrix(model, x_test, y_test, save_path=confusion_matrix_path)
+
+    # Save variance histogram plot
+    variance_plot_path = os.path.join(results_folder, 'variance_histogram.png')
+    calculate_prediction_variance(model, x_test, save_path=variance_plot_path)
