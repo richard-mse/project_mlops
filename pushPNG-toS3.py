@@ -3,7 +3,7 @@ import os
 from google.oauth2 import service_account
 
 # Path to your service account key file
-key_file_path = r'C:\Users\Benja\OneDrive - HESSO\1er semestre\Machine Learning and Data in Operation\mlops-project-machledata-3657a44f4ecf.json'
+key_file_path = r'C:\...\mlops-project-machledata-3657a44f4ecf.json'
 
 # Load the credentials from the service account JSON file
 credentials = service_account.Credentials.from_service_account_file(key_file_path)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     bucket_name = "png-dataset-processed"
     
     # Local path to the PNGs you want to upload
-    png_directory_path = r"C:\Users\Benja\OneDrive - HESSO\1er semestre\Machine Learning and Data in Operation\project_mlops\dataset\processed"
+    png_directory_path = r"C:\...\project_mlops\dataset\processed"
     
     # Upload the PNGs to the bucket in the specified folder structure
     upload_pngs_to_bucket(bucket_name, png_directory_path)
