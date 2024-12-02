@@ -101,8 +101,20 @@ def record_model(model_to_save, optimizer=True):
         }
     )
 
+def create_folder():
+    try:
+        os.mkdir(MODEL_PATH)
+        print(f"Directory '{MODEL_PATH}' created successfully.")
+    except FileExistsError:
+        print(f"Directory '{MODEL_PATH}' already exists.")
+    except PermissionError:
+        print(f"Permission denied: Unable to create '{MODEL_PATH}'.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def export_model():
+
+    create_folder()
     bentoml.models.export_model(f"{MODEL_TITLE}:latest",
                                 f"{MODEL_PATH}/{MODEL_TITLE}.bentomodel")
     np.save(f"{MODEL_PATH}/history.npy", model.history.history)

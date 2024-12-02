@@ -12,11 +12,11 @@ from typing_extensions import Annotated
 from common.constant import MODEL_TITLE
 
 
-@bentoml.service(name="hiragana_bodies_classifier")
+@bentoml.service
 class HiraganaClassifierService:
-    print("HELLLLLLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
     print(MODEL_TITLE)
     bento_model = bentoml.keras.get(MODEL_TITLE)
+    # TODO : crash here
     print("Custom objects:", bento_model.__str__())
     print("Custom objects:", bento_model.custom_objects)
 
