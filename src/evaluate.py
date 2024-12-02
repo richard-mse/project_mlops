@@ -7,7 +7,11 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.utils import to_categorical
 import bentoml
 
-from common.constants import MODEL_TITLE, MODEL_PATH
+from common.constant import MODEL_TITLE, MODEL_PATH
+
+
+# MODEL_TITLE = "hiragana_classifier_model"
+# MODEL_PATH = "model"
 
 
 # Function to load images from directories in dataset/trainset/
@@ -117,3 +121,6 @@ if __name__ == "__main__":
     # Save confusion matrix plot
     confusion_matrix_path = os.path.join(results_folder, 'confusion_matrix.png')
     plot_confusion_matrix(model, x_test, y_test, save_path=confusion_matrix_path)
+
+    print("Custom objects:", model.__str__())
+    print("Custom objects:", model.custom_objects)

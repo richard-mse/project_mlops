@@ -9,12 +9,16 @@ from bentoml.validators import ContentType
 from pydantic import Field
 from typing_extensions import Annotated
 
-from common.constants import MODEL_TITLE
+from common.constant import MODEL_TITLE
 
 
-@bentoml.service
+@bentoml.service(name="hiragana_bodies_classifier")
 class HiraganaClassifierService:
+    print("HELLLLLLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+    print(MODEL_TITLE)
     bento_model = bentoml.keras.get(MODEL_TITLE)
+    print("Custom objects:", bento_model.__str__())
+    print("Custom objects:", bento_model.custom_objects)
 
     def __init__(self) -> None:
         self.preprocess = self.bento_model.custom_objects["preprocess"]
@@ -33,5 +37,3 @@ class HiraganaClassifierService:
         predictions = self.model.predict(image)
 
         return json.dumps(self.postprocess(predictions))
-
-# bentoml serve --working-dir ./src serve:HiraganaClassifierService

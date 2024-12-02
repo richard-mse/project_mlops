@@ -2,6 +2,7 @@ import os
 
 import bentoml
 import numpy as np
+from bentoml import keras
 
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
 from tensorflow.keras.models import Sequential
@@ -11,8 +12,11 @@ from tensorflow.keras.utils import to_categorical
 import tensorflow as tf
 from PIL.Image import Image
 
-from common.constants import MODEL_TITLE, MODEL_PATH
+from common.constant import MODEL_TITLE, MODEL_PATH
 
+
+# MODEL_TITLE = "hiragana_classifier_model"
+# MODEL_PATH = "model"
 
 # Function to load images from directories in dataset/trainset/
 def load_images_from_folders(base_dir="dataset/trainset"):
@@ -68,7 +72,7 @@ def train_model(model, x_train, y_train, epochs=10, batch_size=128):
     return history
 
 
-def save_model(model_name, model_to_save, optimizer=True):
+def record_model(model_to_save, optimizer=True):
     def preprocess(x: Image):
         x = x.convert('L')  # Convert to grayscale (1 channel)
         x = x.resize((64, 64))
@@ -88,7 +92,7 @@ def save_model(model_name, model_to_save, optimizer=True):
         }
 
     bentoml.keras.save_model(
-        model_name,
+        MODEL_TITLE,
         model_to_save,
         include_optimizer=optimizer,
         custom_objects={
@@ -98,11 +102,12 @@ def save_model(model_name, model_to_save, optimizer=True):
     )
 
 
-def export_model(model_name, model_p):
-    bentoml.models.export_model(model_name, f"{model_p}/{model_name}.bentomodel")
-    np.save(f"{model_p}/history.npy", model.history.history)
+def export_model():
+    bentoml.models.export_model(f"{MODEL_TITLE}:latest",
+                                f"{MODEL_PATH}/{MODEL_TITLE}.bentomodel")
+    np.save(f"{MODEL_PATH}/history.npy", model.history.history)
     print("Training history:", history.history)
-    print(f"\nModel saved at {model_p} folder")
+    print(f"\nModel saved at {MODEL_PATH} folder")
 
 
 if __name__ == "__main__":
@@ -119,5 +124,5 @@ if __name__ == "__main__":
     model.summary()
     history = train_model(model, x_train, y_train)
 
-    save_model(MODEL_TITLE, model)
-    export_model(MODEL_TITLE, MODEL_PATH)
+    record_model(model)
+    export_model()
