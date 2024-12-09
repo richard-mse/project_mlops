@@ -1,6 +1,6 @@
 stages:
   process:
-    cmd: python src/imageProcess.py
+    cmd: python3 src/imageProcess.py
     deps:
       - src/imageProcess.py
       - dataset/unprocessed/downloaded/archive
@@ -17,12 +17,12 @@ stages:
       - dataset/processed/ku
 
   update-dataset:
-    cmd: python updateDataset.py
+    cmd: python3 updateDataset.py
     outs:
       - dataset.h5
 
   prepare:
-    cmd: python src/prepare.py
+    cmd: python3 src/prepare.py
     deps:
       - dataset.h5
       - dataset/processed/a
@@ -37,20 +37,17 @@ stages:
       - dataset/processed/ku
 
   train:
-    cmd: python src/train.py
+    cmd: python3 src/train.py
     deps:
       - src/train.py
       - dataset.h5
     outs:
       - model.h5
-      - results/loss.png
 
   evaluate:
-    cmd: python src/evaluate.py
+    cmd: python3 src/evaluate.py
     deps:
       - src/evaluate.py
       - model.h5
       - dataset.h5
-    outs:
-      - results/confusion_matrix.png
-      - results/variance_histogram.png
+

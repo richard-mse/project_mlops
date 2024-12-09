@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import bentoml
 import numpy as np
@@ -114,15 +115,28 @@ if __name__ == "__main__":
     model.summary()
     history = train_model(model, x_train, y_train)
 
-    # Create results folder if not exists
+    # Define folder paths
     results_folder = 'results'
+    old_results_folder = 'old_results'
+
+    # Create results folder if it doesn't exist
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
-    # Save loss plot
+    # Create old_results folder if it doesn't exist
+    if not os.path.exists(old_results_folder):
+        os.makedirs(old_results_folder)
+
+    # Check if the old loss file exists and move it to old_results_folder
     loss_path = os.path.join(results_folder, 'loss.png')
+    if os.path.exists(loss_path):
+        old_loss_path = os.path.join(old_results_folder, 'loss_old.png')
+        shutil.move(loss_path, old_loss_path)  # Move the old loss file
+
+    # Save the new loss plot
     plot_loss(history, loss_path)
 
+    # Record and export the model
     record_model(model)
     export_model()
 

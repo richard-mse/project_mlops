@@ -5,7 +5,7 @@ from datetime import datetime
 from PIL import Image
 
 # Path to your service account key file
-key_file_path = r'C:\Users\Benja\OneDrive - HESSO\1er semestre\Machine Learning and Data in Operation\mlops-project-machledata-3657a44f4ecf.json'
+key_file_path = r'mlops-project-machledata-3657a44f4ecf.json'
 
 # Load the credentials
 credentials = service_account.Credentials.from_service_account_file(key_file_path)
