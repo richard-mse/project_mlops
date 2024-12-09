@@ -24,7 +24,17 @@ def evaluate_model(model, x_test, y_test):
     print(f"Test Accuracy: {test_accuracy:.4f}")
     return test_accuracy
 
-def plot_confusion_matrix(model, x_test, y_test, save_path=None):
+def plot_confusion_matrix(model, x_test, y_test, class_names, save_path=None):
+    """
+    Plot a confusion matrix for a given model and test dataset.
+    
+    Args:
+        model: Trained model to evaluate.
+        x_test: Input data for testing.
+        y_test: True labels (one-hot encoded).
+        class_names: List of class names corresponding to the labels.
+        save_path: Optional path to save the plot image.
+    """
     # Get model predictions
     y_pred = model.predict(x_test)
     y_pred_classes = np.argmax(y_pred, axis=1)
@@ -35,7 +45,10 @@ def plot_confusion_matrix(model, x_test, y_test, save_path=None):
     
     # Plot confusion matrix
     plt.figure(figsize=(10, 8))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=range(len(np.unique(y_true))), yticklabels=range(len(np.unique(y_true))))
+    sns.heatmap(
+        cm, annot=True, fmt="d", cmap="Blues", 
+        xticklabels=class_names, yticklabels=class_names
+    )
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
@@ -121,7 +134,7 @@ if __name__ == "__main__":
     if os.path.exists(confusion_matrix_path):
         old_confusion_matrix_path = os.path.join(old_results_folder, 'confusion_matrix_old.png')
         shutil.move(confusion_matrix_path, old_confusion_matrix_path)  # Move the old confusion matrix
-    plot_confusion_matrix(model, x_test, y_test, save_path=confusion_matrix_path)
+    plot_confusion_matrix(model, x_test, y_test, class_names, save_path=confusion_matrix_path)
 
     # Save variance histogram plot (move old file if exists)
     variance_plot_path = os.path.join(results_folder, 'variance_histogram.png')
