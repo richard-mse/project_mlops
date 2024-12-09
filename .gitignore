@@ -244,3 +244,11 @@ fabric.properties
 *.bentomodel
 *.json
 *.png
+
+# Allow specific PNG files (exceptions)
+!project_mlops/old_results/confusion_matrix.png
+!project_mlops/old_results/loss.png
+!project_mlops/old_results/variance_histogram.png
+!project_mlops/results/confusion_matrix.png
+!project_mlops/results/loss.png
+!project_mlops/results/variance_histogram.png
