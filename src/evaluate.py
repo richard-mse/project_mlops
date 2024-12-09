@@ -7,13 +7,11 @@ from sklearn.metrics import confusion_matrix
 from tensorflow.keras.utils import to_categorical
 import h5py
 
-
 def extract_dataset(base_file):
     with h5py.File(base_file + ".h5", 'r') as f:
-        class_names=f.attrs["class_list"]
+        class_names = f.attrs["class_list"]
         images = f['X_test'][:]
         labels = f['y_test'][:]
-
     return images, labels, class_names
 
 def evaluate_model(model, x_test, y_test):
@@ -52,6 +50,7 @@ def plot_loss(history, save_path=None):
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
+
 def calculate_prediction_variance(model, x_test, save_path=None):
     """
     Calculate the variance of the model's predictions and save the histogram plot.
@@ -85,19 +84,20 @@ def calculate_prediction_variance(model, x_test, save_path=None):
 
 
 if __name__ == "__main__":
-    x_test, labels, class_names = extract_dataset(base_file="dataset")
+    # Correct path to the dataset located in the root folder
+    x_test, labels, class_names = extract_dataset(base_file="dataset")  # Corrected path
 
     # Map labels to integers and one-hot encode them
     y_test = to_categorical(labels, num_classes=len(class_names))  # One-hot encode labels
 
-    # Load the trained model
-    model = load_model('model.h5')  # The model trained in train.py
-    
+    # Load the trained model located in the root folder
+    model = load_model('model.h5')  # Corrected path
+
     # Evaluate the model and display accuracy
     evaluate_model(model, x_test, y_test)
     
     # Create results folder if not exists
-    results_folder = 'results'
+    results_folder = 'results'  # Adjusted path
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
