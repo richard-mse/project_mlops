@@ -5,7 +5,11 @@ import seaborn as sns
 from tensorflow.keras.models import load_model
 from sklearn.metrics import confusion_matrix
 from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import h5py
+import bentoml
+
+from common.constant import MODEL_TITLE, MODEL_PATH
 
 def extract_dataset(base_file):
     with h5py.File(base_file + ".h5", 'r') as f:
@@ -57,14 +61,14 @@ def calculate_prediction_variance(model, x_test, save_path=None):
     """
     # Get model predictions
     predictions = model.predict(x_test)
-    
+
     # Calculate variance for each sample
     variances = np.var(predictions, axis=1)  # Variance across class probabilities for each sample
-    
+
     # Calculate mean variance
     mean_variance = np.mean(variances)
     print(f"Mean Variance of Predictions: {mean_variance:.4f}")
-    
+
     # Plot histogram of variances
     plt.figure(figsize=(10, 6))
     plt.hist(variances, bins=20, color='blue', edgecolor='black')
@@ -72,7 +76,7 @@ def calculate_prediction_variance(model, x_test, save_path=None):
     plt.xlabel("Variance")
     plt.ylabel("Frequency")
     plt.grid()
-    
+
     # Save or show the plot
     if save_path:
         plt.savefig(save_path, dpi=300)  # Save histogram plot
@@ -90,12 +94,17 @@ if __name__ == "__main__":
     # Map labels to integers and one-hot encode them
     y_test = to_categorical(labels, num_classes=len(class_names))  # One-hot encode labels
 
-    # Load the trained model located in the root folder
-    model = load_model('model.h5')  # Corrected path
+    try:
+        bentoml.models.import_model(f"{MODEL_PATH}/{MODEL_TITLE}.bentomodel")
+    except bentoml.exceptions.BentoMLException:
+        print("Model already exists in the model store - skipping import.")
+
+    # Load the trained model
+    model = bentoml.keras.load_model(MODEL_TITLE)
 
     # Evaluate the model and display accuracy
     evaluate_model(model, x_test, y_test)
-    
+
     # Create results folder if not exists
     results_folder = 'results'  # Adjusted path
     if not os.path.exists(results_folder):
