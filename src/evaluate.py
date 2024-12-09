@@ -8,6 +8,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import h5py
 import bentoml
+import shutil
 
 from common.constant import MODEL_TITLE, MODEL_PATH
 
@@ -110,10 +111,21 @@ if __name__ == "__main__":
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
-    # Save confusion matrix plot
+    # Create old_results folder if not exists
+    old_results_folder = 'old_results'  # Adjusted path
+    if not os.path.exists(old_results_folder):
+        os.makedirs(old_results_folder)
+
+    # Save confusion matrix plot (move old file if exists)
     confusion_matrix_path = os.path.join(results_folder, 'confusion_matrix.png')
+    if os.path.exists(confusion_matrix_path):
+        old_confusion_matrix_path = os.path.join(old_results_folder, 'confusion_matrix_old.png')
+        shutil.move(confusion_matrix_path, old_confusion_matrix_path)  # Move the old confusion matrix
     plot_confusion_matrix(model, x_test, y_test, save_path=confusion_matrix_path)
 
-    # Save variance histogram plot
+    # Save variance histogram plot (move old file if exists)
     variance_plot_path = os.path.join(results_folder, 'variance_histogram.png')
+    if os.path.exists(variance_plot_path):
+        old_variance_plot_path = os.path.join(old_results_folder, 'variance_histogram_old.png')
+        shutil.move(variance_plot_path, old_variance_plot_path)  # Move the old variance histogram
     calculate_prediction_variance(model, x_test, save_path=variance_plot_path)

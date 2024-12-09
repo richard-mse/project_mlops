@@ -43,7 +43,6 @@ stages:
       - dataset.h5
     outs:
       - model.h5
-      - results/loss.png
 
   evaluate:
     cmd: python src/evaluate.py
@@ -51,6 +50,3 @@ stages:
       - src/evaluate.py
       - model.h5
       - dataset.h5
-    outs:
-      - results/confusion_matrix.png
-      - results/variance_histogram.png
