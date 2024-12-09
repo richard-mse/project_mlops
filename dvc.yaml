@@ -3,7 +3,7 @@ stages:
     cmd: python3 src/imageProcess.py
     deps:
       - src/imageProcess.py
-      - dataset/unprocessed/downloaded/archive
+      - dataset/unprocessed/downloaded
     outs:
       - dataset/processed/a
       - dataset/processed/e

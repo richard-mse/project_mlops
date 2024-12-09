@@ -95,6 +95,8 @@ if __name__ == "__main__":
     fetch_images_from_gcs(bucket_name, "image/pending/", local_download_dir)
     print("Fetching archive images...")
     fetch_images_from_gcs(bucket_name, "image/archive/", local_download_dir)
+    print("Fetching augmented images...")
+    fetch_images_from_gcs(bucket_name, "image/augmented_balanced_dataset/", local_download_dir)
 
     # Process images
     print("Processing images...")
