@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Annotated
 
 import bentoml
@@ -11,14 +12,14 @@ from typing_extensions import Annotated
 
 from common.constant import MODEL_TITLE
 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "path/to/your/service-account-key.json"
+
 
 @bentoml.service
 class HiraganaClassifierService:
     print(MODEL_TITLE)
     bento_model = bentoml.keras.get(MODEL_TITLE)
     # TODO : crash here
-    print("Custom objects:", bento_model.__str__())
-    print("Custom objects:", bento_model.custom_objects)
 
     def __init__(self) -> None:
         self.preprocess = self.bento_model.custom_objects["preprocess"]
@@ -37,3 +38,4 @@ class HiraganaClassifierService:
         predictions = self.model.predict(image)
 
         return json.dumps(self.postprocess(predictions))
+
