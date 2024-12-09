@@ -75,7 +75,7 @@ stages:
     deps:
     - path: dataset.h5
       hash: md5
-      md5: 9cea295afcb87d874d5abb113fd8f9fc
+      md5: 62cc90ff8314d3554f232a538b133547
       size: 9411469
     - path: dataset/processed/a
       hash: md5
@@ -132,7 +132,7 @@ stages:
     deps:
     - path: dataset.h5
       hash: md5
-      md5: 9cea295afcb87d874d5abb113fd8f9fc
+      md5: 62cc90ff8314d3554f232a538b133547
       size: 9411469
     - path: src/train.py
       hash: md5
@@ -141,18 +141,18 @@ stages:
     outs:
     - path: model.h5
       hash: md5
-      md5: 0e700c46a2c57de96e1ff6efc32fcac5
+      md5: ebdc20ac148d02791cb92c1ca1eee945
       size: 19552832
   evaluate:
     cmd: python3 src/evaluate.py
     deps:
     - path: dataset.h5
       hash: md5
-      md5: 9cea295afcb87d874d5abb113fd8f9fc
+      md5: 62cc90ff8314d3554f232a538b133547
       size: 9411469
     - path: model.h5
       hash: md5
-      md5: 0e700c46a2c57de96e1ff6efc32fcac5
+      md5: ebdc20ac148d02791cb92c1ca1eee945
       size: 19552832
     - path: src/evaluate.py
       hash: md5
