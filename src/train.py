@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
@@ -55,12 +56,12 @@ def plot_loss(history, save_path=None):
     else:
         plt.show()
 
-def train_model(model, x_train, y_train, epochs=10, batch_size=128):
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+def train_model(model, x_train, y_train, epochs=30, batch_size=32, learning_rate=0.001):
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
     history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, validation_split=0.2)
-    model.save('model.h5')  # Save the trained model
+    model.save('model.h5') # Save the trained model
     return history
-
 
 def record_model(model_to_save, optimizer=True):
     def preprocess(x: Image):
