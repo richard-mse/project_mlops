@@ -1,0 +1,173 @@
+schema: '2.0'
+stages:
+  process:
+    cmd: python src/imageProcess.py
+    deps:
+    - path: dataset/unprocessed/downloaded/archive
+      hash: md5
+      md5: 5ddd68289d7dbd879d50fad960121c20.dir
+      size: 40702
+      nfiles: 58
+    - path: src/imageProcess.py
+      hash: md5
+      md5: 80f102e4d2624c879bda73a627e1f918
+      size: 5088
+    outs:
+    - path: dataset/processed/a
+      hash: md5
+      md5: 43ad58a27dcdfbf267ca071101bbfc2d.dir
+      size: 15616
+      nfiles: 20
+    - path: dataset/processed/e
+      hash: md5
+      md5: 0fbcb4660537db6d06923790e84d404f.dir
+      size: 7631
+      nfiles: 10
+    - path: dataset/processed/i
+      hash: md5
+      md5: 5ec488647b43f963f329df4e0b66f0e2.dir
+      size: 11240
+      nfiles: 18
+    - path: dataset/processed/ka
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ke
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ki
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ko
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ku
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/o
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/u
+      hash: md5
+      md5: 0c3bf74c9a2e598751c7394252087b6f.dir
+      size: 6460
+      nfiles: 10
+  update-dataset:
+    cmd: python updateDataset.py
+    outs:
+    - path: dataset.h5
+      hash: md5
+      md5: 8549cad352e2c1849e568703944704c0
+      size: 31528
+  prepare:
+    cmd: python src/prepare.py
+    deps:
+    - path: dataset.h5
+      hash: md5
+      md5: a9e495081836db84012b3b95a5b45f20
+      size: 271376
+    - path: dataset/processed/a
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/e
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/i
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ka
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ke
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ki
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ko
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/ku
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/o
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    - path: dataset/processed/u
+      hash: md5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+  train:
+    cmd: python src/train.py
+    deps:
+    - path: dataset.h5
+      hash: md5
+      md5: a9e495081836db84012b3b95a5b45f20
+      size: 271376
+    - path: src/train.py
+      hash: md5
+      md5: c399c16cfcfc371088ffebe7d7e8a1db
+      size: 2821
+    outs:
+    - path: model.h5
+      hash: md5
+      md5: d2fe54811163950caa8fa0ab671753f6
+      size: 19552832
+    - path: results/loss.png
+      hash: md5
+      md5: fc7d5ded0111e7abdc960be6129ecc67
+      size: 135884
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+    - path: dataset.h5
+      hash: md5
+      md5: a9e495081836db84012b3b95a5b45f20
+      size: 271376
+    - path: model.h5
+      hash: md5
+      md5: d2fe54811163950caa8fa0ab671753f6
+      size: 19552832
+    - path: src/evaluate.py
+      hash: md5
+      md5: e87091b49c70794bec0b5c548ac93dbc
+      size: 3944
+    outs:
+    - path: results/confusion_matrix.png
+      hash: md5
+      md5: 127fe511d61b64e3a9e62c1cbfadb3da
+      size: 79764
+    - path: results/variance_histogram.png
+      hash: md5
+      md5: 85d297bf956be76535c4daf543658b93
+      size: 69092
