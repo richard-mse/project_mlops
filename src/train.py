@@ -62,32 +62,32 @@ def train_model(model, x_train, y_train, epochs=10, batch_size=128):
 
 
 def record_model(model_to_save, optimizer=True):
-    def preprocess(x: Image):
-        x = x.convert('L')  # Convert to grayscale (1 channel)
-        x = x.resize((64, 64))
-        x = np.array(x)
-        x = x / 255.0
-        x = np.expand_dims(x, axis=-1)  # Ensure it has 1 channel (shape will be (64, 64, 1))
-        x = np.expand_dims(x, axis=0)  # Add batch dimension (shape will be (1, 64, 64, 1))
-        return x
-
-    def postprocess(x: Image):
-        return {
-            "prediction": labels[tf.argmax(x, axis=-1).numpy()[0]],
-            "probabilities": {
-                labels[i]: prob
-                for i, prob in enumerate(tf.nn.softmax(x).numpy()[0].tolist())
-            },
-        }
+    # def preprocess(x: Image):
+    #     x = x.convert('L')  # Convert to grayscale (1 channel)
+    #     x = x.resize((64, 64))
+    #     x = np.array(x)
+    #     x = x / 255.0
+    #     x = np.expand_dims(x, axis=-1)  # Ensure it has 1 channel (shape will be (64, 64, 1))
+    #     x = np.expand_dims(x, axis=0)  # Add batch dimension (shape will be (1, 64, 64, 1))
+    #     return x
+    #
+    # def postprocess(x: Image):
+    #     return {
+    #         "prediction": labels[tf.argmax(x, axis=-1).numpy()[0]],
+    #         "probabilities": {
+    #             labels[i]: prob
+    #             for i, prob in enumerate(tf.nn.softmax(x).numpy()[0].tolist())
+    #         },
+    #     }
 
     bentoml.keras.save_model(
         MODEL_TITLE,
         model_to_save,
         include_optimizer=optimizer,
-        custom_objects={
-            "preprocess": preprocess,
-            "postprocess": postprocess,
-        }
+        # custom_objects={
+        #     "preprocess": preprocess,
+        #     "postprocess": postprocess,
+        # }
     )
 
 def export_model():

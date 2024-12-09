@@ -19,6 +19,7 @@ from common.constant import MODEL_TITLE, PATH_CREDENTIAL, BUCKET_NAME, PROJECT_I
 credentials = service_account.Credentials.from_service_account_file(f"../{PATH_CREDENTIAL}")
 client = storage.Client(credentials=credentials, project=PROJECT_ID)
 
+# bentoml containerize hiragana_classifier_service:latest --image-tag hiragana_classifier_service:latest
 
 def upload_to_gcs(file_name, file_data, character):
     bucket = client.get_bucket(BUCKET_NAME)
@@ -31,26 +32,26 @@ def upload_to_gcs(file_name, file_data, character):
 @bentoml.service
 class HiraganaClassifierService:
 
-    bento_model = bentoml.keras.get(MODEL_TITLE)
-    # TODO : crash here
-
-    def __init__(self) -> None:
-        self.preprocess = self.bento_model.custom_objects["preprocess"]
-        self.postprocess = self.bento_model.custom_objects["postprocess"]
-        self.model = self.bento_model.load_model()
-
-    @bentoml.api()
-    def predict(
-            self,
-            image: Annotated[PILImage, ContentType("image/png")] = Field(description="Hiragana image"),
-            letter_confirmation: str = Field(..., description="write which letter you drew"),
-    ) -> Annotated[str, ContentType("application/json")]:
-        image = self.preprocess(image)
-        print(f"Hiragana drew : {letter_confirmation}")
-
-        predictions = self.model.predict(image)
-
-        return json.dumps(self.postprocess(predictions))
+    # bento_model = bentoml.keras.get(MODEL_TITLE)
+    # # TODO : crash here
+    #
+    # def __init__(self) -> None:
+    #     self.preprocess = self.bento_model.custom_objects["preprocess"]
+    #     self.postprocess = self.bento_model.custom_objects["postprocess"]
+    #     self.model = self.bento_model.load_model()
+    #
+    # @bentoml.api()
+    # def predict(
+    #         self,
+    #         image: Annotated[PILImage, ContentType("image/png")] = Field(description="Hiragana image"),
+    #         letter_confirmation: str = Field(..., description="write which letter you drew"),
+    # ) -> Annotated[str, ContentType("application/json")]:
+    #     image = self.preprocess(image)
+    #     print(f"Hiragana drew : {letter_confirmation}")
+    #
+    #     predictions = self.model.predict(image)
+    #
+    #     return json.dumps(self.postprocess(predictions))
 
     @bentoml.api()
     def upload_images(self, inputs: List[PILImage], label: str) -> List[str]:
