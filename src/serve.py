@@ -43,14 +43,17 @@ def preprocess(x: Image):
     x = np.expand_dims(x, axis=0)  # Add batch dimension (shape will be (1, 64, 64, 1))
     return x
 
-def postprocess(x: Image):
-    return {
-        "prediction": LABELS[tf.argmax(x, axis=-1).numpy()[0]],
+def postprocess(predictions: np.ndarray):
+    probabilities = tf.nn.softmax(predictions[0]).numpy()
+    predicted_class = LABELS[np.argmax(probabilities)]
+
+    result = {
+        "prediction": predicted_class,
         "probabilities": {
-            LABELS[i]: prob
-            for i, prob in enumerate(tf.nn.softmax(x).numpy()[0].tolist())
+            LABELS[i]: float(prob) for i, prob in enumerate(probabilities)
         },
     }
+    return result
 
 
 @bentoml.service
