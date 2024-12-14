@@ -1,10 +1,12 @@
 import os
+import shutil
 
 import bentoml
 import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
@@ -57,23 +59,18 @@ def plot_loss(history, save_path=None):
     else:
         plt.show()
 
-
-def train_model(model, x_train, y_train, epochs=10, batch_size=128):
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+def train_model(model, x_train, y_train, epochs=30, batch_size=32, learning_rate=0.001):
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
     history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, validation_split=0.2)
-    model.save('model.h5')  # Save the trained model
+    model.save('model.h5') # Save the trained model
     return history
-
 
 def record_model(model_to_save, optimizer=True):
     bentoml.keras.save_model(
         MODEL_TITLE,
         model_to_save,
         include_optimizer=optimizer,
-        # custom_objects={
-        #     "preprocess": preprocess,
-        #     "postprocess": postprocess,
-        # }
     )
 
 
@@ -101,15 +98,28 @@ if __name__ == "__main__":
     model.summary()
     history = train_model(model, x_train, y_train)
 
-    # Create results folder if not exists
+    # Define folder paths
     results_folder = 'results'
+    old_results_folder = 'old_results'
+
+    # Create results folder if it doesn't exist
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
-    # Save loss plot
+    # Create old_results folder if it doesn't exist
+    if not os.path.exists(old_results_folder):
+        os.makedirs(old_results_folder)
+
+    # Check if the old loss file exists and move it to old_results_folder
     loss_path = os.path.join(results_folder, 'loss.png')
+    if os.path.exists(loss_path):
+        old_loss_path = os.path.join(old_results_folder, 'loss_old.png')
+        shutil.move(loss_path, old_loss_path)  # Move the old loss file
+
+    # Save the new loss plot
     plot_loss(history, loss_path)
 
+    # Record and export the model
     record_model(model)
     export_model()
 

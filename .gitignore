@@ -160,6 +160,8 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+/dataset.h5
+/model.h5
 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -242,3 +244,11 @@ fabric.properties
 *.bentomodel
 *.json
 *.png
+
+# Allow specific PNG files (exceptions)
+!project_mlops/old_results/confusion_matrix.png
+!project_mlops/old_results/loss.png
+!project_mlops/old_results/variance_histogram.png
+!project_mlops/results/confusion_matrix.png
+!project_mlops/results/loss.png
+!project_mlops/results/variance_histogram.png

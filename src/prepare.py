@@ -6,6 +6,15 @@ import warnings
 
 #Fonction for extract data from dataset.h5
 def extract_dataset(base_file):
+
+    file_path = base_file + ".h5"
+    
+    # Debugging the file path
+    print(f"Looking for file at: {file_path}")
+    
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file '{file_path}' does not exist.")
+
     with h5py.File(base_file + ".h5", 'r') as f:
         lastRevision = f.attrs["revision"]
         class_names = f.attrs["class_list"]

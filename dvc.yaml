@@ -1,0 +1,54 @@
+stages:
+  process:
+    cmd: python3 src/imageProcess.py
+    deps:
+      - src/imageProcess.py
+      - dataset/unprocessed/downloaded
+    outs:
+      - dataset/processed/a
+      - dataset/processed/e
+      - dataset/processed/i
+      - dataset/processed/o
+      - dataset/processed/u
+      - dataset/processed/ka
+      - dataset/processed/ke
+      - dataset/processed/ki
+      - dataset/processed/ko
+      - dataset/processed/ku
+
+  update-dataset:
+    cmd: python3 updateDataset.py
+    outs:
+      - dataset.h5
+
+  prepare:
+    cmd: python3 src/prepare.py
+    deps:
+      - dataset.h5
+      - dataset/processed/a
+      - dataset/processed/e
+      - dataset/processed/i
+      - dataset/processed/o
+      - dataset/processed/u
+      - dataset/processed/ka
+      - dataset/processed/ke
+      - dataset/processed/ki
+      - dataset/processed/ko
+      - dataset/processed/ku
+
+  train:
+    cmd: python3 src/train.py
+    deps:
+      - src/train.py
+      - dataset.h5
+    outs:
+      - model.h5
+
+  evaluate:
+    cmd: python3 src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - model.h5
+      - dataset.h5
+
+

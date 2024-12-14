@@ -8,16 +8,15 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import h5py
 import bentoml
+import shutil
 
 from common.constant import MODEL_TITLE, MODEL_PATH
 
-
 def extract_dataset(base_file):
     with h5py.File(base_file + ".h5", 'r') as f:
-        class_names=f.attrs["class_list"]
+        class_names = f.attrs["class_list"]
         images = f['X_test'][:]
         labels = f['y_test'][:]
-
     return images, labels, class_names
 
 def evaluate_model(model, x_test, y_test):
@@ -25,7 +24,17 @@ def evaluate_model(model, x_test, y_test):
     print(f"Test Accuracy: {test_accuracy:.4f}")
     return test_accuracy
 
-def plot_confusion_matrix(model, x_test, y_test, save_path=None):
+def plot_confusion_matrix(model, x_test, y_test, class_names, save_path=None):
+    """
+    Plot a confusion matrix for a given model and test dataset.
+    
+    Args:
+        model: Trained model to evaluate.
+        x_test: Input data for testing.
+        y_test: True labels (one-hot encoded).
+        class_names: List of class names corresponding to the labels.
+        save_path: Optional path to save the plot image.
+    """
     # Get model predictions
     y_pred = model.predict(x_test)
     y_pred_classes = np.argmax(y_pred, axis=1)
@@ -36,7 +45,10 @@ def plot_confusion_matrix(model, x_test, y_test, save_path=None):
     
     # Plot confusion matrix
     plt.figure(figsize=(10, 8))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=range(len(np.unique(y_true))), yticklabels=range(len(np.unique(y_true))))
+    sns.heatmap(
+        cm, annot=True, fmt="d", cmap="Blues", 
+        xticklabels=class_names, yticklabels=class_names
+    )
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
@@ -90,7 +102,8 @@ def calculate_prediction_variance(model, x_test, save_path=None):
 
 
 if __name__ == "__main__":
-    x_test, labels, class_names = extract_dataset(base_file="dataset")
+    # Correct path to the dataset located in the root folder
+    x_test, labels, class_names = extract_dataset(base_file="dataset")  # Corrected path
 
     # Map labels to integers and one-hot encode them
     y_test = to_categorical(labels, num_classes=len(class_names))  # One-hot encode labels
@@ -107,14 +120,25 @@ if __name__ == "__main__":
     evaluate_model(model, x_test, y_test)
 
     # Create results folder if not exists
-    results_folder = 'results'
+    results_folder = 'results'  # Adjusted path
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
-    # Save confusion matrix plot
-    confusion_matrix_path = os.path.join(results_folder, 'confusion_matrix.png')
-    plot_confusion_matrix(model, x_test, y_test, save_path=confusion_matrix_path)
+    # Create old_results folder if not exists
+    old_results_folder = 'old_results'  # Adjusted path
+    if not os.path.exists(old_results_folder):
+        os.makedirs(old_results_folder)
 
-    # Save variance histogram plot
+    # Save confusion matrix plot (move old file if exists)
+    confusion_matrix_path = os.path.join(results_folder, 'confusion_matrix.png')
+    if os.path.exists(confusion_matrix_path):
+        old_confusion_matrix_path = os.path.join(old_results_folder, 'confusion_matrix_old.png')
+        shutil.move(confusion_matrix_path, old_confusion_matrix_path)  # Move the old confusion matrix
+    plot_confusion_matrix(model, x_test, y_test, class_names, save_path=confusion_matrix_path)
+
+    # Save variance histogram plot (move old file if exists)
     variance_plot_path = os.path.join(results_folder, 'variance_histogram.png')
+    if os.path.exists(variance_plot_path):
+        old_variance_plot_path = os.path.join(old_results_folder, 'variance_histogram_old.png')
+        shutil.move(variance_plot_path, old_variance_plot_path)  # Move the old variance histogram
     calculate_prediction_variance(model, x_test, save_path=variance_plot_path)
