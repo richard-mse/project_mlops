@@ -74,7 +74,7 @@ class HiraganaClassifierService:
         return json.dumps(postprocess(predictions))
 
     @bentoml.api()
-    def upload_images(self, image: Annotated[PILImage, ContentType("image/png")], label: str) -> str:
+    def upload_image(self, image: Annotated[PILImage, ContentType("image/png")], label: str) -> str:
         """
         Handle upload of image in google cloud.
         """

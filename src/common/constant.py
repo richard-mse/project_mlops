@@ -5,4 +5,3 @@ BUCKET_NAME = "png-dataset-processed"
 PROJECT_ID = "mlops-project-machledata"
 
 LABELS = ['a','e','i','ka','ke','ki','ko','ku','o','u']
-TST = "test"
