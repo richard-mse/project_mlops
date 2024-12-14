@@ -2,6 +2,8 @@ service: 'serve:HiraganaClassifierService'
 include:
   - serve.py
   - common/
+  - mlops-project-machledata-3657a44f4ecf.json
+  - dataset/
 python:
   packages:
     - "tensorflow==2.17.0"

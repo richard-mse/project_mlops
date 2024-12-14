@@ -14,14 +14,16 @@ from PIL.Image import Image
 
 from common.constant import MODEL_TITLE, MODEL_PATH
 
+
 #Fonction for extract data from dataset.h5
 def extract_dataset(base_file):
     with h5py.File(base_file + ".h5", 'r') as f:
-        class_names=f.attrs["class_list"]
+        class_names = f.attrs["class_list"]
         images = f['X_train'][:]
         labels = f['y_train'][:]
 
     return images, labels, class_names
+
 
 def create_model(input_shape=(64, 64, 1), num_classes=10):
     model = Sequential([
@@ -36,6 +38,7 @@ def create_model(input_shape=(64, 64, 1), num_classes=10):
         Dense(num_classes, activation='softmax')
     ])
     return model
+
 
 def plot_loss(history, save_path=None):
     # Plot loss curve
@@ -54,6 +57,7 @@ def plot_loss(history, save_path=None):
     else:
         plt.show()
 
+
 def train_model(model, x_train, y_train, epochs=10, batch_size=128):
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, validation_split=0.2)
@@ -62,24 +66,6 @@ def train_model(model, x_train, y_train, epochs=10, batch_size=128):
 
 
 def record_model(model_to_save, optimizer=True):
-    # def preprocess(x: Image):
-    #     x = x.convert('L')  # Convert to grayscale (1 channel)
-    #     x = x.resize((64, 64))
-    #     x = np.array(x)
-    #     x = x / 255.0
-    #     x = np.expand_dims(x, axis=-1)  # Ensure it has 1 channel (shape will be (64, 64, 1))
-    #     x = np.expand_dims(x, axis=0)  # Add batch dimension (shape will be (1, 64, 64, 1))
-    #     return x
-    #
-    # def postprocess(x: Image):
-    #     return {
-    #         "prediction": labels[tf.argmax(x, axis=-1).numpy()[0]],
-    #         "probabilities": {
-    #             labels[i]: prob
-    #             for i, prob in enumerate(tf.nn.softmax(x).numpy()[0].tolist())
-    #         },
-    #     }
-
     bentoml.keras.save_model(
         MODEL_TITLE,
         model_to_save,
@@ -89,6 +75,7 @@ def record_model(model_to_save, optimizer=True):
         #     "postprocess": postprocess,
         # }
     )
+
 
 def export_model():
     if not os.path.exists(MODEL_PATH):
