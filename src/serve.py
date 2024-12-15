@@ -48,10 +48,7 @@ def postprocess(predictions: np.ndarray):
     predicted_class = LABELS[np.argmax(probabilities)]
 
     result = {
-        "prediction": predicted_class,
-        "probabilities": {
-            LABELS[i]: float(prob) for i, prob in enumerate(probabilities)
-        },
+        "prediction": predicted_class
     }
     return result
 
